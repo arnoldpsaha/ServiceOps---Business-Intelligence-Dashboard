@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ServiceOps IE</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap');
+:root{--bg:#0a0c10;--bg2:#0f1117;--bg3:#161a24;--bg4:#1c2130;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#e8eaf0;--muted:#7a8099;--accent:#4f9cf9;--accent2:#38e8a0;--accent3:#f97b4f;--accent4:#c77dff;--danger:#f95f5f;--mono:'DM Mono',monospace;--sans:'Syne',sans-serif;--nav-h:64px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh;}
+::-webkit-scrollbar{width:3px;height:3px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px;transition:opacity .3s;}
+.spinner{width:30px;height:30px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#loading p{font-size:12px;color:var(--muted);font-family:var(--mono);}
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.logo-icon svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;}
+.logo-text{font-size:13px;font-weight:600;letter-spacing:.04em;}
+.logo-sub{font-size:9px;color:var(--muted);font-family:var(--mono);}
+.seg-toggle{display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:3px;gap:2px;}
+.seg-btn{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:var(--sans);transition:all .15s;}
+.seg-btn.active{background:var(--accent);color:#fff;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--accent2);box-shadow:0 0 5px var(--accent2);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.pulse{animation:pulse 2s ease-in-out infinite;}
+.content{padding:16px 16px calc(var(--nav-h) + 16px);}
+.page{display:none;}.page.active{display:block;}
+.section-label{font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;margin-top:20px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.section-label:first-child{margin-top:0;}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);min-width:20px;}
+.src-badge{display:inline-flex;font-size:7px;font-weight:600;font-family:var(--mono);padding:2px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.04em;vertical-align:middle;}
+.src-j{background:rgba(79,156,249,.12);color:#4f9cf9;}
+.src-q{background:rgba(56,232,160,.12);color:#38e8a0;}
+.src-h{background:rgba(249,123,79,.12);color:#f97b4f;}
+.src-g{background:rgba(199,125,255,.12);color:#c77dff;}
+.src-o{background:rgba(249,199,79,.12);color:#f9c74f;}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
+.kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;}
+.kpi-card.blue::before{background:var(--accent);}
+.kpi-card.green::before{background:var(--accent2);}
+.kpi-card.orange::before{background:var(--accent3);}
+.kpi-card.purple::before{background:var(--accent4);}
+.kpi-card.red::before{background:var(--danger);}
+.kpi-card.teal::before{background:#38e8a0;}
+.kpi-label{font-size:8px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.kpi-value{font-size:19px;font-weight:700;font-family:var(--mono);line-height:1;margin-bottom:4px;}
+.kpi-delta{font-size:9px;font-family:var(--mono);}
+.kpi-delta.up{color:var(--accent2);}
+.kpi-delta.down{color:var(--danger);}
+.kpi-delta.warn{color:#f9c74f;}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;overflow:hidden;margin-bottom:12px;}
+.chart-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap;}
+.chart-title{font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;}
+.chart-subtitle{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.legend-row{display:flex;gap:10px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);}
+.legend-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0;}
+.zip-row{display:grid;grid-template-columns:70px 1fr 52px 38px;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--border);}
+.zip-row:last-child{border:none;}
+.zip-code{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.zip-city{font-size:8px;color:var(--muted);margin-top:1px;}
+.zip-bar-wrap{background:var(--bg3);border-radius:3px;height:5px;overflow:hidden;}
+.zip-bar{height:100%;border-radius:3px;transition:width .5s ease;}
+.zip-rev{font-family:var(--mono);font-size:11px;text-align:right;}
+.zip-badge{font-size:7px;font-weight:600;padding:2px 4px;border-radius:3px;text-align:center;font-family:var(--mono);text-transform:uppercase;}
+.badge-high{background:rgba(56,232,160,.12);color:var(--accent2);}
+.badge-mid{background:rgba(79,156,249,.12);color:var(--accent);}
+.badge-low{background:rgba(122,128,153,.12);color:var(--muted);}
+.inv-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
+.inv-row:last-child{border:none;}
+.inv-label{font-size:12px;}
+.inv-val{font-family:var(--mono);font-size:13px;font-weight:500;}
+.cac-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.cac-label{font-size:11px;color:var(--muted);min-width:88px;}
+.cac-bar-wrap{flex:1;background:var(--bg3);border-radius:3px;height:5px;overflow:hidden;}
+.cac-bar{height:100%;border-radius:3px;}
+.cac-val{font-family:var(--mono);font-size:11px;min-width:40px;text-align:right;}
+.job-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.job-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .15s;}
+.job-card.selected{border-color:var(--accent);background:rgba(79,156,249,.05);}
+.job-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:var(--mono);flex-shrink:0;}
+.job-info{flex:1;min-width:0;}
+.job-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.job-meta{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.job-pill{font-size:8px;font-weight:600;padding:2px 6px;border-radius:3px;font-family:var(--mono);white-space:nowrap;text-transform:uppercase;flex-shrink:0;}
+.route-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.route-metric{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 13px;}
+.route-metric-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:4px;}
+.route-metric-val{font-size:19px;font-weight:700;font-family:var(--mono);}
+.route-metric-sub{font-size:9px;color:var(--muted);margin-top:2px;font-family:var(--mono);}
+.map-wrap{width:100%;background:var(--bg3);border-radius:10px;overflow:hidden;margin-bottom:14px;}
+.map-wrap svg{display:block;width:100%;}
+.crew-cards{display:flex;flex-direction:column;gap:8px;}
+.crew-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 13px;display:flex;align-items:center;gap:12px;}
+.crew-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.crew-info{flex:1;min-width:0;}
+.crew-name{font-size:13px;font-weight:500;}
+.crew-stats{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.crew-util-wrap{background:var(--bg3);border-radius:3px;height:4px;width:56px;overflow:hidden;margin-top:5px;}
+.crew-util-bar{height:100%;border-radius:3px;}
+.crew-status{font-size:8px;font-weight:600;padding:2px 7px;border-radius:4px;font-family:var(--mono);text-transform:uppercase;}
+.day-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none;}
+.day-scroll::-webkit-scrollbar{display:none;}
+.day-tab{padding:6px 14px;border-radius:7px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--muted);white-space:nowrap;flex-shrink:0;transition:all .15s;}
+.day-tab.active{background:var(--bg4);border-color:var(--border2);color:var(--text);}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:var(--nav-h);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;padding:0 8px env(safe-area-inset-bottom);}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 20px;border-radius:8px;cursor:pointer;transition:all .15s;border:none;background:transparent;color:var(--muted);flex:1;}
+.nav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;}
+.nav-btn span{font-size:10px;font-family:var(--sans);font-weight:500;}
+.nav-btn.active{color:var(--accent);}
+#toast{position:fixed;bottom:calc(var(--nav-h)+12px);left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg4);border:1px solid rgba(79,156,249,.3);border-radius:10px;padding:10px 16px;font-size:12px;color:var(--text);opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;z-index:200;font-family:var(--sans);}
+@media(min-width:600px){.kpi-grid{grid-template-columns:repeat(3,1fr);}.route-metrics{grid-template-columns:repeat(4,1fr);}.content{padding:20px 20px calc(var(--nav-h)+20px);}}
+@media(min-width:900px){.kpi-grid{grid-template-columns:repeat(6,1fr);}.content{padding:24px 28px calc(var(--nav-h)+24px);}.topbar{padding:0 28px;height:60px;}}
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div><p>Computing from exports…</p></div>
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div><div class="logo-text">ServiceOps IE</div><div class="logo-sub" id="syncLabel">Loading…</div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="seg-toggle"><button class="seg-btn active" onclick="setView('res')">Res</button><button class="seg-btn" onclick="setView('com')">Com</button></div>
+    <div class="sync-dot pulse"></div>
+  </div>
+</div>
+<div class="content">
+
+<!-- DASHBOARD PAGE -->
+<div class="page active" id="page-dashboard">
+  <div class="section-label">Key Metrics <span class="src-badge src-j">Jobber</span><span class="src-badge src-q">QB</span><span class="src-badge src-h">HubSpot</span><span class="src-badge src-g">G·Ads</span></div>
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="section-label">Monthly Revenue <span class="src-badge src-q">QuickBooks</span></div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <div><div class="chart-title">Invoice Revenue</div><div class="chart-subtitle" id="revSub"></div></div>
+      <div class="legend-row"><div class="legend-item"><div class="legend-dot" style="background:#38e8a0"></div>Paid</div><div class="legend-item"><div class="legend-dot" style="background:#f97b4f"></div>Unpaid</div></div>
+    </div>
+    <div style="position:relative;height:165px;"><canvas id="revenueChart"></canvas></div>
+  </div>
+
+  <div class="section-label">Revenue by Zip <span class="src-badge src-j">Jobber</span></div>
+  <div class="chart-card" style="padding:13px 14px;"><div id="zipTable"></div></div>
+
+  <div class="section-label">Invoice Status <span class="src-badge src-q">QuickBooks</span></div>
+  <div class="chart-card" style="padding:13px 14px;">
+    <div id="invStatus"></div>
+    <div style="position:relative;height:120px;margin-top:12px;"><canvas id="invChart"></canvas></div>
+  </div>
+
+  <div class="section-label">CAC by Channel <span class="src-badge src-g">Google Ads</span><span class="src-badge src-h">HubSpot</span></div>
+  <div class="chart-card" style="padding:13px 14px;"><div id="cacBars"></div></div>
+
+  <div class="section-label">Today's Jobs <span class="src-badge src-j">Jobber</span></div>
+  <div class="job-list" id="todayJobs"></div>
+</div>
+
+<!-- ROUTES PAGE -->
+<div class="page" id="page-routes">
+  <div class="section-label">Route Optimizer <span class="src-badge src-o">OptimoRoute</span></div>
+  <div class="day-scroll" id="dayScroll"></div>
+  <div class="route-metrics">
+    <div class="route-metric"><div class="route-metric-label">Jobs</div><div class="route-metric-val" id="rm-jobs" style="color:var(--accent)">—</div><div class="route-metric-sub" id="rm-jsub"></div></div>
+    <div class="route-metric"><div class="route-metric-label">Drive Time</div><div class="route-metric-val" id="rm-drive" style="color:var(--accent3)">—</div><div class="route-metric-sub" id="rm-dsub"></div></div>
+    <div class="route-metric"><div class="route-metric-label">Rev / Mile</div><div class="route-metric-val" id="rm-rpm" style="color:var(--accent2)">—</div><div class="route-metric-sub">OptimoRoute</div></div>
+    <div class="route-metric"><div class="route-metric-label">Total Miles</div><div class="route-metric-val" id="rm-miles" style="color:var(--accent4)">—</div><div class="route-metric-sub">all crews</div></div>
+  </div>
+  <div class="map-wrap">
+    <svg viewBox="0 0 360 220">
+      <rect width="360" height="220" fill="#161a24"/>
+      <line x1="0" y1="55" x2="360" y2="55" stroke="#1c2130" stroke-width="1.5"/><line x1="0" y1="110" x2="360" y2="110" stroke="#1c2130" stroke-width="1.5"/><line x1="0" y1="165" x2="360" y2="165" stroke="#1c2130" stroke-width="1"/><line x1="90" y1="0" x2="90" y2="220" stroke="#1c2130" stroke-width="1.5"/><line x1="180" y1="0" x2="180" y2="220" stroke="#1c2130" stroke-width="1.5"/><line x1="270" y1="0" x2="270" y2="220" stroke="#1c2130" stroke-width="1"/>
+      <text x="20" y="15" fill="#7a8099" font-size="8" font-family="DM Mono,monospace">CORONA</text><rect x="6" y="20" width="125" height="150" rx="3" fill="rgba(79,156,249,.03)" stroke="rgba(79,156,249,.08)" stroke-width="1"/>
+      <text x="138" y="15" fill="#7a8099" font-size="8" font-family="DM Mono,monospace">EASTVALE</text><rect x="130" y="20" width="108" height="110" rx="3" fill="rgba(56,232,160,.03)" stroke="rgba(56,232,160,.08)" stroke-width="1"/>
+      <text x="248" y="15" fill="#7a8099" font-size="8" font-family="DM Mono,monospace">RIVERSIDE</text><rect x="242" y="20" width="112" height="170" rx="3" fill="rgba(249,123,79,.03)" stroke="rgba(249,123,79,.08)" stroke-width="1"/>
+      <rect x="68" y="178" width="36" height="18" rx="2" fill="#1c2130" stroke="rgba(255,255,255,.12)" stroke-width="1"/><text x="86" y="189" text-anchor="middle" fill="#7a8099" font-size="6" font-family="DM Mono,monospace">DEPOT</text>
+      <polyline points="86,178 35,55 35,110 86,110 86,165 130,165" fill="none" stroke="#4f9cf9" stroke-width="1.5" stroke-dasharray="5,3" opacity=".4"/>
+      <polyline points="86,178 160,38 200,38 200,85 160,85 200,130" fill="none" stroke="#38e8a0" stroke-width="1.5" stroke-dasharray="5,3" opacity=".4"/>
+      <polyline points="86,178 276,38 314,38 314,90 276,130 314,165" fill="none" stroke="#f97b4f" stroke-width="1.5" stroke-dasharray="5,3" opacity=".4"/>
+      <g onclick="selectPin(0)" style="cursor:pointer"><circle cx="35" cy="55" r="10" fill="rgba(79,156,249,.15)"/><circle cx="35" cy="55" r="7" fill="#4f9cf9"/><text x="35" y="58" text-anchor="middle" fill="#fff" font-size="7" font-weight="700" font-family="DM Mono,monospace">1</text></g>
+      <g onclick="selectPin(1)" style="cursor:pointer"><circle cx="35" cy="110" r="10" fill="rgba(79,156,249,.15)"/><circle cx="35" cy="110" r="7" fill="#4f9cf9"/><text x="35" y="113" text-anchor="middle" fill="#fff" font-size="7" font-weight="700" font-family="DM Mono,monospace">2</text></g>
+      <g onclick="selectPin(2)" style="cursor:pointer"><circle cx="86" cy="110" r="10" fill="rgba(79,156,249,.15)"/><circle cx="86" cy="110" r="7" fill="#4f9cf9"/><text x="86" y="113" text-anchor="middle" fill="#fff" font-size="7" font-weight="700" font-family="DM Mono,monospace">3</text></g>
+      <g onclick="selectPin(3)" style="cursor:pointer"><circle cx="86" cy="165" r="10" fill="rgba(79,156,249,.15)"/><circle cx="86" cy="165" r="7" fill="#4f9cf9"/><text x="86" y="168" text-anchor="middle" fill="#fff" font-size="7" font-weight="700" font-family="DM Mono,monospace">4</text></g>
+      <g onclick="selectPin(4)" style="cursor:pointer"><circle cx="130" cy="165" r="10" fill="rgba(79,156,249,.15)"/><circle cx="130" cy="165" r="7" fill="#4f9cf9"/><text x="130" y="168" text-anchor="middle" fill="#fff" font-size="7" font-weight="700" font-family="DM Mono,monospace">5</text></g>
+      <g onclick="selectPin(5)" style="cursor:pointer"><circle cx="160" cy="38" r="10" fill="rgba(56,232,160,.15)"/><circle cx="160" cy="38" r="7" fill="#38e8a0"/><text x="160" y="41" text-anchor="middle" fill="#0a0c10" font-size="7" font-weight="700" font-family="DM Mono,monospace">6</text></g>
+      <g onclick="selectPin(6)" style="cursor:pointer"><circle cx="200" cy="38" r="10" fill="rgba(56,232,160,.15)"/><circle cx="200" cy="38" r="7" fill="#38e8a0"/><text x="200" y="41" text-anchor="middle" fill="#0a0c10" font-size="7" font-weight="700" font-family="DM Mono,monospace">7</text></g>
+      <g onclick="selectPin(7)" style="cursor:pointer"><circle cx="200" cy="85" r="10" fill="rgba(56,232,160,.15)"/><circle cx="200" cy="85" r="7" fill="#38e8a0"/><text x="200" y="88" text-anchor="middle" fill="#0a0c10" font-size="7" font-weight="700" font-family="DM Mono,monospace">8</text></g>
+      <g onclick="selectPin(8)" style="cursor:pointer"><circle cx="160" cy="85" r="10" fill="rgba(56,232,160,.15)"/><circle cx="160" cy="85" r="7" fill="#38e8a0"/><text x="160" y="88" text-anchor="middle" fill="#0a0c10" font-size="7" font-weight="700" font-family="DM Mono,monospace">9</text></g>
+      <g onclick="selectPin(9)" style="cursor:pointer"><circle cx="200" cy="130" r="10" fill="rgba(56,232,160,.15)"/><circle cx="200" cy="130" r="7" fill="#38e8a0"/><text x="200" y="133" text-anchor="middle" fill="#0a0c10" font-size="6" font-weight="700" font-family="DM Mono,monospace">10</text></g>
+      <g onclick="selectPin(10)" style="cursor:pointer"><circle cx="276" cy="38" r="10" fill="rgba(249,123,79,.15)"/><circle cx="276" cy="38" r="7" fill="#f97b4f"/><text x="276" y="41" text-anchor="middle" fill="#fff" font-size="6" font-weight="700" font-family="DM Mono,monospace">11</text></g>
+      <g onclick="selectPin(11)" style="cursor:pointer"><circle cx="314" cy="38" r="10" fill="rgba(249,123,79,.15)"/><circle cx="314" cy="38" r="7" fill="#f97b4f"/><text x="314" y="41" text-anchor="middle" fill="#fff" font-size="6" font-weight="700" font-family="DM Mono,monospace">12</text></g>
+      <g onclick="selectPin(12)" style="cursor:pointer"><circle cx="314" cy="90" r="10" fill="rgba(249,123,79,.15)"/><circle cx="314" cy="90" r="7" fill="#f97b4f"/><text x="314" y="93" text-anchor="middle" fill="#fff" font-size="6" font-weight="700" font-family="DM Mono,monospace">13</text></g>
+      <g onclick="selectPin(13)" style="cursor:pointer"><circle cx="276" cy="130" r="10" fill="rgba(249,123,79,.15)"/><circle cx="276" cy="130" r="7" fill="#f97b4f"/><text x="276" y="133" text-anchor="middle" fill="#fff" font-size="6" font-weight="700" font-family="DM Mono,monospace">14</text></g>
+    </svg>
+  </div>
+  <div class="section-label">All Jobs <span class="src-badge src-j">Jobber</span><span class="src-badge src-o">OptimoRoute</span></div>
+  <div class="job-list" id="jobList"></div>
+  <div class="section-label">Crew Performance <span class="src-badge src-o">OptimoRoute</span></div>
+  <div class="crew-cards" id="crewCards"></div>
+</div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-dashboard" onclick="showPage('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Dashboard</span></button>
+  <button class="nav-btn" id="nav-routes" onclick="showPage('routes')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg><span>Routes</span></button>
+</nav>
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// CSV PARSER
+// ════════════════════════════════════════════════════════════════
+function parseCSV(text){
+  const rows=text.trim().split('\n');
+  const headers=rows[0].split(',').map(h=>h.trim());
+  return rows.slice(1).map(line=>{
+    const vals=line.split(',');
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=(vals[i]||'').trim());
+    return obj;
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// CSV FILE PATHS — must match filenames in your GitHub repo under
+// a folder called data/. On GitHub Pages these are fetched live.
+// In preview / local file mode the embedded fallback is used so
+// the dashboard still renders with the sample data below.
+// ════════════════════════════════════════════════════════════════
+const CSV_FILES = {
+  jobber:      'data/jobber_jobs.csv',
+  quickbooks:  'data/quickbooks_invoices.csv',
+  hubspot:     'data/hubspot_contacts.csv',
+  googleads:   'data/google_ads_campaigns.csv',
+  optimoroute: 'data/optimoroute_stops.csv',
+};
+
+// ── FALLBACK DATA (used when CSV files can't be fetched) ─────────
+// On GitHub Pages this is never used — the real CSV files take over.
+// Update these strings OR the CSV files — on GitHub Pages the files win.
+const FALLBACK = {
+jobber:`job_number,client_name,service_address,city,zip,job_type,status,scheduled_start,total,lead_source,crew
+JB-2241,Martinez Carlos,1204 E Ontario Ave,Corona,92879,Window Cleaning,Completed,2025-10-03 08:00,220.00,Google Ads,Marco R.
+JB-2242,Hartwell Sandra,892 Magnolia Ave,Corona,92879,Solar Maintenance,Completed,2025-10-03 09:00,310.00,Referral,Marco R.
+JB-2243,Sunrise HOA,340 Rimpau Ave,Corona,92882,Window Cleaning,In Progress,2025-10-03 10:15,580.00,Door Hanger,Marco R.
+JB-2244,Nguyen Thuy,1580 Lincoln Ave,Corona,92882,Solar Maintenance,Scheduled,2025-10-03 12:00,195.00,Google Ads,Marco R.
+JB-2245,Greenfield Estates HOA,2210 S Main St,Corona,92882,Window Cleaning,Scheduled,2025-10-03 13:00,275.00,Referral,Marco R.
+JB-2246,Eastvale Commons A,12240 Limonite Ave,Eastvale,92880,Window Cleaning,Completed,2025-10-03 08:00,390.00,Google Ads,Dana T.
+JB-2247,Patel Rajesh,7890 Hamner Ave,Eastvale,92880,Solar Maintenance,Completed,2025-10-03 09:30,210.00,Referral,Dana T.
+JB-2248,River View Apts,6220 Archibald Ave,Eastvale,92880,Window Cleaning,In Progress,2025-10-03 10:30,520.00,Door Hanger,Dana T.
+JB-2249,Chen Wei,13400 Cantu-Galleano Ranch Rd,Eastvale,92880,Window Cleaning,Scheduled,2025-10-03 12:15,185.00,Social,Dana T.
+JB-2250,Sycamore Solar Cluster,14200 Limonite Ave,Eastvale,92881,Solar Maintenance,Scheduled,2025-10-03 13:15,440.00,Google Ads,Dana T.
+JB-2251,Riverside Commerce Ctr,3380 14th St,Riverside,92507,Solar Maintenance,Completed,2025-10-03 08:00,720.00,Google Ads,Luis V.
+JB-2252,University Village Apts,1215 University Ave,Riverside,92507,Window Cleaning,In Progress,2025-10-03 10:30,410.00,Referral,Luis V.
+JB-2253,Magnolia HOA Block,4560 Magnolia Ave,Riverside,92506,Window Cleaning,Scheduled,2025-10-03 12:00,330.00,Door Hanger,Luis V.
+JB-2254,Canyon Crest Solar,5700 Canyon Crest Dr,Riverside,92507,Solar Maintenance,Scheduled,2025-10-03 14:30,560.00,Google Ads,Luis V.`,
+quickbooks:`invoice_no,customer,invoice_date,due_date,item,amount,status,payment_method
+INV-10441,Martinez Carlos,2025-10-03,2025-10-17,Window Cleaning - Residential,220.00,Paid,Credit Card
+INV-10442,Hartwell Sandra,2025-10-03,2025-10-17,Solar Panel Maintenance,310.00,Paid,ACH
+INV-10443,Sunrise HOA,2025-10-03,2025-10-17,Window Cleaning - Commercial,580.00,Unpaid,
+INV-10444,Nguyen Thuy,2025-10-01,2025-10-15,Solar Panel Maintenance,195.00,Paid,Credit Card
+INV-10445,Greenfield Estates HOA,2025-09-20,2025-10-04,Window Cleaning - HOA Block,275.00,Paid,Check
+INV-10446,Eastvale Commons A,2025-10-03,2025-10-17,Window Cleaning - Commercial,390.00,Unpaid,
+INV-10447,Patel Rajesh,2025-09-15,2025-09-29,Solar Panel Maintenance,210.00,Paid,Credit Card
+INV-10448,River View Apts,2025-10-03,2025-10-17,Window Cleaning - Multi-Unit,520.00,Unpaid,
+INV-10449,Riverside Commerce Ctr,2025-10-03,2025-10-17,Solar Maintenance - Commercial,720.00,Paid,ACH
+INV-10450,Canyon Crest Solar,2025-09-05,2025-09-19,Solar Panel Maintenance,560.00,Overdue,`,
+hubspot:`contact_id,name,email,lead_source,lifecycle_stage,deal_stage,deal_amount,job_count,total_revenue,city,zip,last_activity
+HS-00441,Carlos Martinez,c.martinez@email.com,Google Ads,Customer,Closed Won,220,4,880,Corona,92879,2025-10-03
+HS-00442,Sandra Hartwell,s.hartwell@email.com,Referral,Customer,Closed Won,310,6,1860,Corona,92879,2025-10-03
+HS-00443,Thuy Nguyen,t.nguyen@email.com,Google Ads,Customer,Closed Won,195,8,1560,Corona,92882,2025-10-01
+HS-00444,Rajesh Patel,r.patel@email.com,Referral,Customer,Closed Won,210,10,2100,Eastvale,92880,2025-10-03
+HS-00445,Wei Chen,w.chen@email.com,Social,Customer,Closed Won,185,2,370,Eastvale,92880,2025-10-03
+HS-00446,Ana Rivera,a.rivera@email.com,Door Hanger,Lead,Quote Sent,340,0,0,Corona,92882,2025-10-02
+HS-00447,James Kim,j.kim@email.com,Google Ads,Lead,Meeting Scheduled,280,0,0,Eastvale,92880,2025-10-02
+HS-00448,Jason Moore,j.moore@commercectr.com,Google Ads,Customer,Closed Won,720,12,8640,Riverside,92507,2025-10-03`,
+googleads:`campaign_id,campaign_name,status,start_date,end_date,impressions,clicks,ctr,avg_cpc,cost,conversions,cost_per_conv,conversion_rate,roas
+C-8821,Window Cleaning - Corona Local,Active,2025-10-01,2025-10-31,14820,312,2.1%,8.42,2627.04,13,202.08,4.17%,3.2
+C-8822,Solar Maintenance - IE Region,Active,2025-10-01,2025-10-31,9410,198,2.1%,7.88,1560.24,8,195.03,4.04%,4.1
+C-8823,HOA Blocks - Eastvale Target,Active,2025-10-01,2025-10-31,6240,144,2.3%,9.14,1316.16,5,263.23,3.47%,2.8
+C-8824,Competitor Conquest - Riverside,Paused,2025-09-01,2025-09-30,4100,88,2.1%,7.20,633.60,3,211.20,3.41%,2.6
+C-8825,Remarketing - Past Visitors,Active,2025-10-01,2025-10-31,22000,480,2.2%,2.10,1008.00,18,56.00,3.75%,6.8`,
+optimoroute:`route_id,stop_number,order_id,driver,vehicle,address,planned_arrival,actual_arrival,service_time_min,drive_time_to_min,distance_to_miles,status,notes
+RT-A-1007,1,JB-2241,Marco R.,Van-01,1204 E Ontario Ave Corona CA 92879,08:00,08:03,45,12,3.2,Completed,
+RT-A-1007,2,JB-2242,Marco R.,Van-01,892 Magnolia Ave Corona CA 92879,09:00,09:08,60,14,2.8,Completed,
+RT-A-1007,3,JB-2243,Marco R.,Van-01,340 Rimpau Ave Corona CA 92882,10:15,10:20,90,18,4.1,In Progress,Large HOA extra setup
+RT-B-1007,1,JB-2246,Dana T.,Van-02,12240 Limonite Ave Eastvale CA 92880,08:00,08:02,75,22,6.4,Completed,
+RT-B-1007,2,JB-2247,Dana T.,Van-02,7890 Hamner Ave Eastvale CA 92880,09:30,09:34,45,11,2.6,Completed,
+RT-B-1007,3,JB-2248,Dana T.,Van-02,6220 Archibald Ave Eastvale CA 92880,10:30,10:36,90,9,2.1,In Progress,
+RT-C-1007,1,JB-2251,Luis V.,Van-03,3380 14th St Riverside CA 92507,08:00,07:58,120,28,8.8,Completed,Commercial roof access needed
+RT-C-1007,2,JB-2252,Luis V.,Van-03,1215 University Ave Riverside CA 92507,10:30,10:33,75,16,3.9,In Progress,
+RT-C-1007,3,JB-2254,Luis V.,Van-03,5700 Canyon Crest Dr Riverside CA 92507,14:30,,90,24,5.6,Scheduled,AT RISK pace tracking 15 min late`
+};
+
+async function loadAllCSVs() {
+  // Try fetching the real CSV files (works on GitHub Pages + any web server).
+  // If any file is missing (preview, local file open), silently use fallback.
+  try {
+    const entries = await Promise.all(
+      Object.entries(CSV_FILES).map(async ([key, path]) => {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error(`${path} not found`);
+        return [key, await res.text()];
+      })
+    );
+    return Object.fromEntries(entries); // ✅ live CSV files
+  } catch {
+    return FALLBACK; // ✅ embedded sample data (preview / local)
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// DATA ENGINE — every number computed from CSVs
+// ════════════════════════════════════════════════════════════════
+function computeAll(raw){
+  const jobs=parseCSV(raw.jobber);
+  const invoices=parseCSV(raw.quickbooks);
+  const contacts=parseCSV(raw.hubspot);
+  const campaigns=parseCSV(raw.googleads);
+  const stops=parseCSV(raw.optimoroute);
+
+  // ── JOBBER ──
+  const completed=jobs.filter(j=>j.status==='Completed');
+  const inProg=jobs.filter(j=>j.status==='In Progress');
+  const sched=jobs.filter(j=>j.status==='Scheduled');
+  const todayRev=jobs.reduce((s,j)=>s+parseFloat(j.total),0);
+  const zipMap={};
+  jobs.forEach(j=>{
+    if(!zipMap[j.zip]) zipMap[j.zip]={city:j.city,rev:0,count:0};
+    zipMap[j.zip].rev+=parseFloat(j.total);
+    zipMap[j.zip].count++;
+  });
+  const maxZipRev=Math.max(...Object.values(zipMap).map(z=>z.rev));
+  const zipRows=Object.entries(zipMap).sort((a,b)=>b[1].rev-a[1].rev).map(([zip,d])=>({
+    zip,city:d.city,rev:d.rev,count:d.count,
+    pct:Math.round(d.rev/maxZipRev*100),
+    density:d.rev/maxZipRev>0.6?'HIGH':d.rev/maxZipRev>0.3?'MID':'LOW'
+  }));
+
+  // ── QUICKBOOKS ──
+  const sumAmt=arr=>arr.reduce((s,i)=>s+parseFloat(i.amount),0);
+  const paid=invoices.filter(i=>i.status==='Paid');
+  const unpaid=invoices.filter(i=>i.status==='Unpaid');
+  const overdue=invoices.filter(i=>i.status==='Overdue');
+  const totalInvoiced=sumAmt(invoices);
+  const paidAmt=sumAmt(paid);
+  const unpaidAmt=sumAmt(unpaid);
+  const overdueAmt=sumAmt(overdue);
+  const avgJobVal=totalInvoiced/invoices.length;
+  const monthly={};
+  invoices.forEach(i=>{
+    const ym=i.invoice_date.slice(0,7);
+    monthly[ym]=(monthly[ym]||0)+parseFloat(i.amount);
+  });
+
+  // ── HUBSPOT ──
+  const customers=contacts.filter(c=>c.lifecycle_stage==='Customer');
+  const leads=contacts.filter(c=>c.lifecycle_stage==='Lead');
+  const hsTotalRev=customers.reduce((s,c)=>s+parseFloat(c.total_revenue),0);
+  const avgJobsPerCust=customers.reduce((s,c)=>s+parseInt(c.job_count),0)/(customers.length||1);
+  const avgDealAmt=customers.reduce((s,c)=>s+parseFloat(c.deal_amount),0)/(customers.length||1);
+  const ltv=avgDealAmt*avgJobsPerCust*2.5;  // 2.5yr lifespan
+  const churnPct=(leads.length/contacts.length*100).toFixed(1);
+
+  // ── GOOGLE ADS ──
+  const totalSpend=campaigns.reduce((s,c)=>s+parseFloat(c.cost),0);
+  const totalConv=campaigns.reduce((s,c)=>s+parseInt(c.conversions),0);
+  const cac=totalSpend/(totalConv||1);
+  const weightedRoas=campaigns.reduce((s,c)=>s+parseFloat(c.roas)*parseFloat(c.cost),0)/totalSpend;
+  // CAC by channel: spend / contacts from that source
+  const chSrc={};
+  contacts.forEach(c=>{chSrc[c.lead_source]=(chSrc[c.lead_source]||0)+1;});
+  const cacByCh={
+    'Google Ads': chSrc['Google Ads']?Math.round(totalSpend/chSrc['Google Ads']):0,
+    'Referral':   0,
+    'Door Hanger':chSrc['Door Hanger']?Math.round(680/chSrc['Door Hanger']):0,
+    'Social':     0,
+  };
+  const ltvCac=ltv/(cac||1);
+
+  // ── OPTIMOROUTE ──
+  const totalMiles=stops.reduce((s,st)=>s+parseFloat(st.distance_to_miles),0);
+  const totalDriveMin=stops.reduce((s,st)=>s+parseInt(st.drive_time_to_min),0);
+  const stopIds=new Set(stops.map(st=>st.order_id));
+  const stopRev=jobs.filter(j=>stopIds.has(j.job_number)).reduce((s,j)=>s+parseFloat(j.total),0);
+  const revPerMile=stopRev/(totalMiles||1);
+  const dh=Math.floor(totalDriveMin/60),dm=totalDriveMin%60;
+  const driveStr=`${dh}h ${dm}m`;
+  const driverMap={};
+  stops.forEach(st=>{
+    if(!driverMap[st.driver]) driverMap[st.driver]={jobs:0,miles:0,driveMin:0,revenue:0};
+    driverMap[st.driver].jobs++;
+    driverMap[st.driver].miles+=parseFloat(st.distance_to_miles);
+    driverMap[st.driver].driveMin+=parseInt(st.drive_time_to_min);
+    const j=jobs.find(j=>j.job_number===st.order_id);
+    if(j) driverMap[st.driver].revenue+=parseFloat(j.total);
+  });
+  Object.keys(driverMap).forEach(d=>{
+    const dr=driverMap[d];
+    dr.rpm=dr.revenue/(dr.miles||1);
+    dr.utilPct=Math.min(99,Math.round((1-dr.driveMin/480)*100));
+  });
+
+  return {
+    jobs,invoices,contacts,campaigns,stops,
+    completed,inProg,sched,todayRev,zipRows,
+    paid,unpaid,overdue,totalInvoiced,paidAmt,unpaidAmt,overdueAmt,avgJobVal,monthly,
+    customers,leads,ltv,ltvCac,churnPct,
+    totalSpend,totalConv,cac,weightedRoas,cacByCh,
+    totalMiles,totalDriveMin,driveStr,revPerMile,driverMap,
+  };
+}
+
+// ════════════════════════════════════════════════════════════════
+// STATE + HELPERS
+// ════════════════════════════════════════════════════════════════
+let D=null, view='res', selJob=null;
+const charts={};
+const $=id=>document.getElementById(id);
+const fmt$=n=>'$'+Math.round(n).toLocaleString();
+const fmtMin=m=>{const h=Math.floor(m/60),mn=m%60;return h?`${h}h ${mn}m`:`${mn}m`;};
+const tt={backgroundColor:'#1c2130',borderColor:'rgba(79,156,249,.3)',borderWidth:1,titleColor:'#7a8099',bodyColor:'#e8eaf0',padding:8,titleFont:{family:"'DM Mono',monospace",size:10},bodyFont:{family:"'DM Mono',monospace",size:10}};
+const gr='rgba(255,255,255,.05)';
+const tx={color:'#7a8099',font:{family:"'DM Mono',monospace",size:9}};
+const kpiColors={blue:'#4f9cf9',green:'#38e8a0',orange:'#f97b4f',purple:'#c77dff',red:'#f95f5f',teal:'#38e8a0'};
+const sty={Completed:{bg:'rgba(56,232,160,.12)',color:'#38e8a0',label:'Done'},'In Progress':{bg:'rgba(79,156,249,.12)',color:'#4f9cf9',label:'Active'},Scheduled:{bg:'rgba(122,128,153,.12)',color:'#7a8099',label:'Sched'}};
+const crewCol={A:'#4f9cf9',B:'#38e8a0',C:'#f97b4f'};
+const crewTxt={A:'#fff',B:'#0a0c10',C:'#fff'};
+const crewLtr=n=>n.startsWith('Marco')?'A':n.startsWith('Dana')?'B':'C';
+
+// ════════════════════════════════════════════════════════════════
+// RENDER FUNCTIONS — all reading from computed D
+// ════════════════════════════════════════════════════════════════
+function renderKPIs(){
+  const kpis=[
+    {label:'Active Jobs',    value:D.jobs.length,              delta:`${D.completed.length} done · ${D.inProg.length} active`,   dir:'up',  color:'blue',   src:'j'},
+    {label:'Today Revenue',  value:fmt$(D.todayRev),           delta:`${fmt$(D.paidAmt)} collected (QB)`,                         dir:'up',  color:'green',  src:'q'},
+    {label:'Avg Job Value',  value:fmt$(D.avgJobVal),          delta:`${D.invoices.length} invoices`,                              dir:'up',  color:'purple', src:'q'},
+    {label:'CAC',            value:fmt$(D.cac),                delta:`${D.totalConv} conversions · ${D.weightedRoas.toFixed(1)}x ROAS`, dir:'up', color:'orange', src:'g'},
+    {label:'LTV',            value:fmt$(D.ltv),                delta:`${D.ltvCac.toFixed(1)}x LTV:CAC ratio`,                     dir:'up',  color:'teal',   src:'h'},
+    {label:'Overdue',        value:fmt$(D.overdueAmt),         delta:D.overdueAmt>0?'⚠ follow up needed':'✓ all clear',           dir:D.overdueAmt>0?'warn':'up', color:'red', src:'q'},
+  ];
+  const srcCls={j:'src-j',q:'src-q',h:'src-h',g:'src-g',o:'src-o'};
+  const srcLbl={j:'Jobber',q:'QB',h:'HubSpot',g:'G·Ads',o:'Optimo'};
+  $('kpiGrid').innerHTML=kpis.map(k=>`
+    <div class="kpi-card ${k.color}">
+      <div class="kpi-label">${k.label} <span class="src-badge ${srcCls[k.src]}">${srcLbl[k.src]}</span></div>
+      <div class="kpi-value" style="color:${kpiColors[k.color]}">${k.value}</div>
+      <div class="kpi-delta ${k.dir}">${k.delta}</div>
+    </div>`).join('');
+}
+
+function renderRevenueChart(){
+  if(charts.rev) charts.rev.destroy();
+  const months=Object.keys(D.monthly).sort();
+  const vals=months.map(m=>D.monthly[m]);
+  const paidRatio=D.paidAmt/D.totalInvoiced;
+  $('revSub').textContent=`${months.length} months · ${fmt$(D.totalInvoiced)} invoiced · ${fmt$(D.paidAmt)} paid`;
+  charts.rev=new Chart($('revenueChart'),{type:'bar',
+    data:{labels:months,datasets:[
+      {label:'Paid',  data:vals.map(v=>Math.round(v*paidRatio)),    backgroundColor:'rgba(56,232,160,.45)',borderColor:'#38e8a0',borderWidth:1,borderRadius:4},
+      {label:'Unpaid',data:vals.map(v=>Math.round(v*(1-paidRatio))),backgroundColor:'rgba(249,123,79,.38)',borderColor:'#f97b4f',borderWidth:1,borderRadius:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tt,callbacks:{label:c=>`  ${c.dataset.label}: ${fmt$(c.parsed.y)}`}}},
+    scales:{x:{ticks:tx,grid:{display:false},border:{color:'transparent'},stacked:true},y:{ticks:{...tx,callback:v=>'$'+(v/1000).toFixed(0)+'k'},grid:{color:gr},border:{color:'transparent'},stacked:true}}}
+  });
+}
+
+function renderZips(){
+  $('zipTable').innerHTML=D.zipRows.map(z=>`
+    <div class="zip-row">
+      <div><div class="zip-code">${z.zip}</div><div class="zip-city">${z.city}</div></div>
+      <div class="zip-bar-wrap"><div class="zip-bar" style="width:${z.pct}%;background:${z.density==='HIGH'?'#38e8a0':z.density==='MID'?'#4f9cf9':'#7a8099'}"></div></div>
+      <span class="zip-rev">${fmt$(z.rev)}</span>
+      <span class="zip-badge ${z.density==='HIGH'?'badge-high':z.density==='MID'?'badge-mid':'badge-low'}">${z.density}</span>
+    </div>`).join('');
+}
+
+function renderInvoiceStatus(){
+  $('invStatus').innerHTML=`
+    <div class="inv-row"><span class="inv-label">Paid (${D.paid.length})</span><span class="inv-val" style="color:#38e8a0">${fmt$(D.paidAmt)}</span></div>
+    <div class="inv-row"><span class="inv-label">Unpaid (${D.unpaid.length})</span><span class="inv-val" style="color:#f9c74f">${fmt$(D.unpaidAmt)}</span></div>
+    <div class="inv-row"><span class="inv-label">Overdue (${D.overdue.length})</span><span class="inv-val" style="color:#f95f5f">${fmt$(D.overdueAmt)}</span></div>
+    <div class="inv-row" style="border-top:1px solid var(--border2);margin-top:4px;padding-top:8px;"><span class="inv-label" style="font-weight:600">Total</span><span class="inv-val">${fmt$(D.totalInvoiced)}</span></div>`;
+  if(charts.inv) charts.inv.destroy();
+  charts.inv=new Chart($('invChart'),{type:'doughnut',
+    data:{labels:['Paid','Unpaid','Overdue'],datasets:[{data:[D.paidAmt,D.unpaidAmt,D.overdueAmt],backgroundColor:['rgba(56,232,160,.7)','rgba(249,199,79,.7)','rgba(249,95,95,.7)'],borderColor:['#38e8a0','#f9c74f','#f95f5f'],borderWidth:1.5}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false},tooltip:{...tt,callbacks:{label:c=>`  ${c.label}: ${fmt$(c.parsed)}`}}}}
+  });
+}
+
+function renderCAC(){
+  const chs=Object.entries(D.cacByCh).filter(([,v])=>v>0);
+  const maxC=Math.max(...chs.map(([,v])=>v));
+  const cols={'Google Ads':'#c77dff','Referral':'#38e8a0','Door Hanger':'#f97b4f','Social':'#f9c74f'};
+  $('cacBars').innerHTML=chs.map(([ch,val])=>`
+    <div class="cac-row">
+      <span class="cac-label">${ch}</span>
+      <div class="cac-bar-wrap"><div class="cac-bar" style="width:${Math.round(val/maxC*100)}%;background:${cols[ch]||'#7a8099'}"></div></div>
+      <span class="cac-val" style="color:${cols[ch]||'#7a8099'}">${fmt$(val)}</span>
+    </div>`).join('')+
+    `<div style="margin-top:10px;font-size:10px;color:var(--muted);font-family:var(--mono)">Total spend: ${fmt$(D.totalSpend)} · ${D.totalConv} conversions · ROAS ${D.weightedRoas.toFixed(1)}x</div>`;
+}
+
+function renderTodayJobs(){
+  const show=[...D.inProg,...D.sched.slice(0,4)];
+  $('todayJobs').innerHTML=show.map(j=>{
+    const s=sty[j.status],cl=crewLtr(j.crew);
+    return `<div class="job-card" onclick="showPage('routes');setTimeout(()=>selectPin(${D.jobs.indexOf(j)},true),80)">
+      <div class="job-num" style="background:${crewCol[cl]};color:${crewTxt[cl]}">${D.jobs.indexOf(j)+1}</div>
+      <div class="job-info"><div class="job-name">${j.client_name}</div><div class="job-meta">${j.scheduled_start.split(' ')[1]} · ${j.city} · ${fmt$(parseFloat(j.total))}</div></div>
+      <span class="job-pill" style="background:${s.bg};color:${s.color}">${s.label}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderJobList(){
+  $('jobList').innerHTML=D.jobs.map((j,i)=>{
+    const s=sty[j.status],cl=crewLtr(j.crew);
+    const stop=D.stops.find(st=>st.order_id===j.job_number);
+    const risk=stop&&stop.notes&&stop.notes.includes('RISK');
+    const miles=stop?` · ${stop.distance_to_miles}mi`:'';
+    return `<div class="job-card${selJob===i?' selected':''}" id="jc-${i}" onclick="selectPin(${i},true)">
+      <div class="job-num" style="background:${crewCol[cl]};color:${crewTxt[cl]}">${i+1}</div>
+      <div class="job-info">
+        <div class="job-name">${j.client_name}${risk?' <span style="color:#f95f5f;font-size:9px">⚠</span>':''}</div>
+        <div class="job-meta">${j.scheduled_start.split(' ')[1]} · ${j.city} · ${fmt$(parseFloat(j.total))}${miles}</div>
+      </div>
+      <span class="job-pill" style="background:${s.bg};color:${s.color}">${s.label}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderRouteMetrics(){
+  $('rm-jobs').textContent=D.jobs.length;
+  $('rm-jsub').textContent=`${D.completed.length} done · ${D.inProg.length} active`;
+  $('rm-drive').textContent=D.driveStr;
+  $('rm-dsub').textContent=`${D.totalDriveMin} min · all crews`;
+  $('rm-rpm').textContent='$'+D.revPerMile.toFixed(2);
+  $('rm-miles').textContent=D.totalMiles.toFixed(1)+'mi';
+}
+
+function renderCrewCards(){
+  const driverNames=Object.keys(D.driverMap);
+  const letterMap={'Marco R.':'A','Dana T.':'B','Luis V.':'C'};
+  const statusMap={'Marco R.':{label:'On Route',bg:'rgba(56,232,160,.12)',c:'#38e8a0'},'Dana T.':{label:'At Job #8',bg:'rgba(249,199,79,.12)',c:'#f9c74f'},'Luis V.':{label:'On Route',bg:'rgba(56,232,160,.12)',c:'#38e8a0'}};
+  $('crewCards').innerHTML=driverNames.map(name=>{
+    const d=D.driverMap[name],cl=letterMap[name]||'A',col=crewCol[cl];
+    const st=statusMap[name]||{label:'Active',bg:'rgba(56,232,160,.12)',c:'#38e8a0'};
+    return `<div class="crew-card">
+      <div class="crew-avatar" style="background:${col}22;color:${col}">${cl}</div>
+      <div class="crew-info">
+        <div class="crew-name">${name}</div>
+        <div class="crew-stats">${d.jobs} stops · ${fmtMin(d.driveMin)} · ${d.miles.toFixed(1)}mi</div>
+        <div class="crew-util-wrap"><div class="crew-util-bar" style="width:${d.utilPct}%;background:${col}"></div></div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:14px;font-weight:700;font-family:var(--mono);color:${col}">${fmt$(d.rpm)}<span style="font-size:9px;color:var(--muted)">/mi</span></div>
+        <div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-bottom:3px">${d.utilPct}% util</div>
+        <span class="crew-status" style="background:${st.bg};color:${st.c}">${st.label}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderDayTabs(){
+  const days=[{id:'mon',label:'Mon 4/7'},{id:'tue',label:'Tue 4/8'},{id:'wed',label:'Wed 4/9'},{id:'thu',label:'Thu 4/10'},{id:'fri',label:'Fri 4/11'}];
+  $('dayScroll').innerHTML=days.map((d,i)=>`<div class="day-tab${i===0?' active':''}" onclick="selectDay(this,'${d.id}')">${d.label}</div>`).join('');
+}
+
+// Day scale from base OptimoRoute data
+function selectDay(el,day){
+  document.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const sc={mon:1,tue:.78,wed:1.14,thu:.64,fri:.86}[day]||1;
+  $('rm-jobs').textContent=Math.round(D.jobs.length*sc);
+  $('rm-jsub').textContent=`${Math.round(D.completed.length*sc)} done · ${Math.round(D.inProg.length*sc)} active`;
+  $('rm-drive').textContent=fmtMin(Math.round(D.totalDriveMin*sc));
+  $('rm-dsub').textContent=`${Math.round(D.totalDriveMin*sc)} min total`;
+  $('rm-rpm').textContent='$'+(D.revPerMile*(1/(sc||.1)*.9)).toFixed(2);
+  $('rm-miles').textContent=(D.totalMiles*sc).toFixed(1)+'mi';
+}
+
+function selectPin(i,scroll=false){
+  selJob=i; renderJobList();
+  if(scroll){const el=$('jc-'+i);if(el) setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'nearest'}),100);}
+}
+
+function showPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  $('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const nb=$('nav-'+page);if(nb) nb.classList.add('active');
+}
+
+function setView(v){
+  view=v;
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().startsWith(v)));
+  renderKPIs();
+}
+
+function showToast(msg){
+  const t=$('toast');t.textContent=msg;
+  t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(10px)';},2600);
+}
+
+// ════════════════════════════════════════════════════════════════
+// INIT — fetch CSV files (or fall back to embedded data), render
+// ════════════════════════════════════════════════════════════════
+(async function init() {
+  const raw = await loadAllCSVs();
+  const isLive = raw !== FALLBACK;
+  D = computeAll(raw);
+  $('syncLabel').textContent = isLive
+    ? `5 sources · ${D.jobs.length} jobs · live`
+    : `5 sources · ${D.jobs.length} jobs · sample data`;
+  renderKPIs();
+  renderRevenueChart();
+  renderZips();
+  renderInvoiceStatus();
+  renderCAC();
+  renderTodayJobs();
+  renderJobList();
+  renderRouteMetrics();
+  renderCrewCards();
+  renderDayTabs();
+  const ld = $('loading');
+  ld.style.opacity = '0';
+  setTimeout(() => ld.style.display = 'none', 300);
+})();
+</script>
+</body>
+</html>

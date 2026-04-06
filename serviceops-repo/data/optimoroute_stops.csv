@@ -1,0 +1,10 @@
+route_id,stop_number,order_id,driver,vehicle,address,planned_arrival,actual_arrival,service_time_min,drive_time_to_min,distance_to_miles,status,notes
+RT-A-1007,1,JB-2241,Marco R.,Van-01,1204 E Ontario Ave Corona CA 92879,08:00,08:03,45,12,3.2,Completed,
+RT-A-1007,2,JB-2242,Marco R.,Van-01,892 Magnolia Ave Corona CA 92879,09:00,09:08,60,14,2.8,Completed,
+RT-A-1007,3,JB-2243,Marco R.,Van-01,340 Rimpau Ave Corona CA 92882,10:15,10:20,90,18,4.1,In Progress,Large HOA extra setup
+RT-B-1007,1,JB-2246,Dana T.,Van-02,12240 Limonite Ave Eastvale CA 92880,08:00,08:02,75,22,6.4,Completed,
+RT-B-1007,2,JB-2247,Dana T.,Van-02,7890 Hamner Ave Eastvale CA 92880,09:30,09:34,45,11,2.6,Completed,
+RT-B-1007,3,JB-2248,Dana T.,Van-02,6220 Archibald Ave Eastvale CA 92880,10:30,10:36,90,9,2.1,In Progress,
+RT-C-1007,1,JB-2251,Luis V.,Van-03,3380 14th St Riverside CA 92507,08:00,07:58,120,28,8.8,Completed,Commercial roof access needed
+RT-C-1007,2,JB-2252,Luis V.,Van-03,1215 University Ave Riverside CA 92507,10:30,10:33,75,16,3.9,In Progress,
+RT-C-1007,3,JB-2254,Luis V.,Van-03,5700 Canyon Crest Dr Riverside CA 92507,14:30,,90,24,5.6,Scheduled,AT RISK pace tracking 15 min late

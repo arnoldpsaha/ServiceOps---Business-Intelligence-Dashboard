@@ -1,0 +1,6 @@
+campaign_id,campaign_name,status,start_date,end_date,impressions,clicks,ctr,avg_cpc,cost,conversions,cost_per_conv,conversion_rate,roas
+C-8821,Window Cleaning — Corona Local,Active,2025-10-01,2025-10-31,14820,312,2.1%,8.42,2627.04,13,202.08,4.17%,3.2
+C-8822,Solar Maintenance — IE Region,Active,2025-10-01,2025-10-31,9410,198,2.1%,7.88,1560.24,8,195.03,4.04%,4.1
+C-8823,HOA Blocks — Eastvale Target,Active,2025-10-01,2025-10-31,6240,144,2.3%,9.14,1316.16,5,263.23,3.47%,2.8
+C-8824,Competitor Conquest — Riverside,Paused,2025-09-01,2025-09-30,4100,88,2.1%,7.20,633.60,3,211.20,3.41%,2.6
+C-8825,Remarketing — Past Visitors,Active,2025-10-01,2025-10-31,22000,480,2.2%,2.10,1008.00,18,56.00,3.75%,6.8

@@ -1,0 +1,11 @@
+invoice_no,customer,invoice_date,due_date,item,amount,status,payment_method
+INV-10441,Martinez Carlos,2025-10-03,2025-10-17,Window Cleaning - Residential,220.00,Paid,Credit Card
+INV-10442,Hartwell Sandra,2025-10-03,2025-10-17,Solar Panel Maintenance,310.00,Paid,ACH
+INV-10443,Sunrise HOA,2025-10-03,2025-10-17,Window Cleaning - Commercial,580.00,Unpaid,
+INV-10444,Nguyen Thuy,2025-10-01,2025-10-15,Solar Panel Maintenance,195.00,Paid,Credit Card
+INV-10445,Greenfield Estates HOA,2025-09-20,2025-10-04,Window Cleaning - HOA Block,275.00,Paid,Check
+INV-10446,Eastvale Commons A,2025-10-03,2025-10-17,Window Cleaning - Commercial,390.00,Unpaid,
+INV-10447,Patel Rajesh,2025-09-15,2025-09-29,Solar Panel Maintenance,210.00,Paid,Credit Card
+INV-10448,River View Apts,2025-10-03,2025-10-17,Window Cleaning - Multi-Unit,520.00,Unpaid,
+INV-10449,Riverside Commerce Ctr,2025-10-03,2025-10-17,Solar Maintenance - Commercial,720.00,Paid,ACH
+INV-10450,Canyon Crest Solar,2025-09-05,2025-09-19,Solar Panel Maintenance,560.00,Overdue,

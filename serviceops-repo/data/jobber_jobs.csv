@@ -1,0 +1,15 @@
+job_number,client_name,service_address,city,zip,job_type,status,scheduled_start,total,lead_source,crew
+JB-2241,Martinez Carlos,1204 E Ontario Ave,Corona,92879,Window Cleaning,Completed,2025-10-03 08:00,220.00,Google Ads,Marco R.
+JB-2242,Hartwell Sandra,892 Magnolia Ave,Corona,92879,Solar Maintenance,Completed,2025-10-03 09:00,310.00,Referral,Marco R.
+JB-2243,Sunrise HOA,340 Rimpau Ave,Corona,92882,Window Cleaning,In Progress,2025-10-03 10:15,580.00,Door Hanger,Marco R.
+JB-2244,Nguyen Thuy,1580 Lincoln Ave,Corona,92882,Solar Maintenance,Scheduled,2025-10-03 12:00,195.00,Google Ads,Marco R.
+JB-2245,Greenfield Estates HOA,2210 S Main St,Corona,92882,Window Cleaning,Scheduled,2025-10-03 13:00,275.00,Referral,Marco R.
+JB-2246,Eastvale Commons A,12240 Limonite Ave,Eastvale,92880,Window Cleaning,Completed,2025-10-03 08:00,390.00,Google Ads,Dana T.
+JB-2247,Patel Rajesh,7890 Hamner Ave,Eastvale,92880,Solar Maintenance,Completed,2025-10-03 09:30,210.00,Referral,Dana T.
+JB-2248,River View Apts,6220 Archibald Ave,Eastvale,92880,Window Cleaning,In Progress,2025-10-03 10:30,520.00,Door Hanger,Dana T.
+JB-2249,Chen Wei,13400 Cantu-Galleano Ranch Rd,Eastvale,92880,Window Cleaning,Scheduled,2025-10-03 12:15,185.00,Social,Dana T.
+JB-2250,Sycamore Solar Cluster,14200 Limonite Ave,Eastvale,92881,Solar Maintenance,Scheduled,2025-10-03 13:15,440.00,Google Ads,Dana T.
+JB-2251,Riverside Commerce Ctr,3380 14th St,Riverside,92507,Solar Maintenance,Completed,2025-10-03 08:00,720.00,Google Ads,Luis V.
+JB-2252,University Village Apts,1215 University Ave,Riverside,92507,Window Cleaning,In Progress,2025-10-03 10:30,410.00,Referral,Luis V.
+JB-2253,Magnolia HOA Block,4560 Magnolia Ave,Riverside,92506,Window Cleaning,Scheduled,2025-10-03 12:00,330.00,Door Hanger,Luis V.
+JB-2254,Canyon Crest Solar,5700 Canyon Crest Dr,Riverside,92507,Solar Maintenance,Scheduled,2025-10-03 14:30,560.00,Google Ads,Luis V.

@@ -1,0 +1,9 @@
+contact_id,name,email,lead_source,lifecycle_stage,deal_stage,deal_amount,job_count,total_revenue,city,zip,last_activity
+HS-00441,Carlos Martinez,c.martinez@email.com,Google Ads,Customer,Closed Won,220,4,880,Corona,92879,2025-10-03
+HS-00442,Sandra Hartwell,s.hartwell@email.com,Referral,Customer,Closed Won,310,6,1860,Corona,92879,2025-10-03
+HS-00443,Thuy Nguyen,t.nguyen@email.com,Google Ads,Customer,Closed Won,195,8,1560,Corona,92882,2025-10-01
+HS-00444,Rajesh Patel,r.patel@email.com,Referral,Customer,Closed Won,210,10,2100,Eastvale,92880,2025-10-03
+HS-00445,Wei Chen,w.chen@email.com,Social,Customer,Closed Won,185,2,370,Eastvale,92880,2025-10-03
+HS-00446,Ana Rivera,a.rivera@email.com,Door Hanger,Lead,Quote Sent,340,0,0,Corona,92882,2025-10-02
+HS-00447,James Kim,j.kim@email.com,Google Ads,Lead,Meeting Scheduled,280,0,0,Eastvale,92880,2025-10-02
+HS-00448,Jason Moore,j.moore@commercectr.com,Google Ads,Customer,Closed Won,720,12,8640,Riverside,92507,2025-10-03
